@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files"><UniqueIdentifier>{8689E94F-1566-4EB8-84C2-47DF1A33EE10}</UniqueIdentifier><Extensions>cpp;c</Extensions></Filter>
+    <Filter Include="Header Files"><UniqueIdentifier>{58D93796-CF4A-437A-BCF9-4C2B20F915B2}</UniqueIdentifier><Extensions>h;hpp</Extensions></Filter>
+    <Filter Include="Source Files\Common"><UniqueIdentifier>{F71DB4BA-F970-4672-931D-5E6D50B6D664}</UniqueIdentifier></Filter>
+    <Filter Include="Source Files\Stages"><UniqueIdentifier>{B6389CCF-E5DD-49CA-BB29-927F5C3BF760}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files\Common"><UniqueIdentifier>{99A53911-071F-4894-AC57-09564B92707D}</UniqueIdentifier></Filter>
+    <Filter Include="Header Files\Stages"><UniqueIdentifier>{DFCB56BE-5B29-4BB5-ACEC-DA01DC5D7D75}</UniqueIdentifier></Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\GameModel.cpp"><Filter>Source Files\Common</Filter></ClCompile>
+    <ClCompile Include="src\RenderCommon.cpp"><Filter>Source Files\Common</Filter></ClCompile>
+    <ClCompile Include="src\StageManager.cpp"><Filter>Source Files\Common</Filter></ClCompile>
+    <ClCompile Include="src\Stage1.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="src\Common.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\GameModel.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\IStage.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\RenderCommon.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\StageManager.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\Stage1.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+  </ItemGroup>
+  <ItemGroup><Manifest Include="LevelDevil.manifest" /><None Include="README.md" /></ItemGroup>
+</Project>

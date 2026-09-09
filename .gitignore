@@ -1,0 +1,7 @@
+/.vs/
+/bin/
+/obj/
+/artifacts/
+/external/SFML-3.1.0/
+/external/*.zip
+*.vcxproj.user

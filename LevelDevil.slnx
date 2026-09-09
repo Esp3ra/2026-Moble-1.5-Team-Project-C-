@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="LevelDevil.vcxproj" Id="678e650d-9e31-45ec-9fdd-839676a7f86b" />
+  <Folder Name="/Tests/">
+    <Project Path="tests/GameModelTests.vcxproj" Id="5af06bc0-1b34-467c-b5e6-b818b5694c97" />
+  </Folder>
+</Solution>
