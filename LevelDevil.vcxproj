@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
-    <ProjectConfiguration Include="Debug|x64"><Configuration>Debug</Configuration><Platform>x64</Platform></ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64"><Configuration>Release</Configuration><Platform>x64</Platform></ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -14,7 +20,7 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
-    <PlatformToolset>v145</PlatformToolset>
+    <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)'=='Debug'" Label="Configuration">
@@ -32,7 +38,9 @@
     <SFMLRoot>$(ProjectDir)external\SFML-3.1.0\</SFMLRoot>
     <LocalDebuggerWorkingDirectory>$(OutDir)</LocalDebuggerWorkingDirectory>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)'=='Debug'"><SFMLDebugSuffix>-d</SFMLDebugSuffix></PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+    <SFMLDebugSuffix>-d</SFMLDebugSuffix>
+  </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <WarningLevel>Level4</WarningLevel>
@@ -51,31 +59,63 @@
       <AdditionalDependencies>sfml-graphics$(SFMLDebugSuffix).lib;sfml-window$(SFMLDebugSuffix).lib;sfml-system$(SFMLDebugSuffix).lib;%(AdditionalDependencies)</AdditionalDependencies>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
-    <Manifest><AdditionalManifestFiles>$(ProjectDir)LevelDevil.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles></Manifest>
+    <Manifest>
+      <AdditionalManifestFiles>$(ProjectDir)LevelDevil.manifest;%(AdditionalManifestFiles)</AdditionalManifestFiles>
+    </Manifest>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Debug'">
-    <ClCompile><Optimization>Disabled</Optimization><RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary><PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)'=='Release'">
-    <ClCompile><Optimization>MaxSpeed</Optimization><FunctionLevelLinking>true</FunctionLevelLinking><IntrinsicFunctions>true</IntrinsicFunctions><RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary><PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions></ClCompile>
-    <Link><EnableCOMDATFolding>true</EnableCOMDATFolding><OptimizeReferences>true</OptimizeReferences></Link>
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\FinalStage.cpp" />
     <ClCompile Include="src\GameModel.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\RenderCommon.cpp" />
     <ClCompile Include="src\Stage1.cpp" />
+    <ClCompile Include="src\Stage2.cpp" />
+    <ClCompile Include="src\Stage3.cpp" />
+    <ClCompile Include="src\Stage3Objects.cpp" />
+    <ClCompile Include="src\Stage4.cpp" />
+    <ClCompile Include="src\Stage5.cpp" />
+    <ClCompile Include="src\Stage6.cpp" />
     <ClCompile Include="src\StageManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Common.hpp" />
+    <ClInclude Include="src\FinalStage.hpp" />
     <ClInclude Include="src\GameModel.hpp" />
     <ClInclude Include="src\IStage.hpp" />
     <ClInclude Include="src\RenderCommon.hpp" />
     <ClInclude Include="src\Stage1.hpp" />
+    <ClInclude Include="src\Stage2.hpp" />
+    <ClInclude Include="src\Stage3.hpp" />
+    <ClInclude Include="src\Stage3Objects.hpp" />
+    <ClInclude Include="src\Stage4.hpp" />
+    <ClInclude Include="src\Stage5.hpp" />
+    <ClInclude Include="src\Stage6.hpp" />
     <ClInclude Include="src\StageManager.hpp" />
   </ItemGroup>
-  <ItemGroup><Manifest Include="LevelDevil.manifest" /><None Include="README.md" /></ItemGroup>
+  <ItemGroup>
+    <Manifest Include="LevelDevil.manifest" />
+    <None Include="README.md" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="VerifySFML" BeforeTargets="PrepareForBuild">
     <Error Condition="!Exists('$(SFMLRoot)include\SFML\Graphics.hpp')" Text="SFML dependency is missing. Run Prepare-Dependencies.ps1 or Build.cmd from the LevelDevil folder." />

@@ -15,7 +15,6 @@ Vec2 Stage1::spawnPoint() const
 {
     return {Stage1Layout::spawnX, Stage1Layout::floor - GameConfig::playerHeight};
 }
-
 void Stage1::rebuildSolids()
 {
     const float depth = GameConfig::height - Stage1Layout::floor + 40.f;
@@ -40,7 +39,7 @@ void Stage1::reset()
     rebuildSolids();
 }
 
-void Stage1::update(const PlayerState& player, float dt)
+void Stage1::update(PlayerState& player, float dt)
 {
     if (!holeOpen_ && player.x + GameConfig::playerWidth >= Stage1Layout::triggerX)
     {

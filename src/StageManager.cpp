@@ -1,7 +1,13 @@
 #include "StageManager.hpp"
 
 #include "IStage.hpp"
+#include "FinalStage.hpp"
 #include "Stage1.hpp"
+#include "Stage2.hpp"
+#include "Stage3.hpp"
+#include "Stage4.hpp"
+#include "Stage5.hpp"
+#include "Stage6.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -13,6 +19,12 @@ StageManager::StageManager()
 {
     // 새 스테이지를 합칠 때 공통 담당자가 이 목록에 StageX를 순서대로 등록합니다.
     stages_.push_back(std::make_unique<Stage1>());
+    stages_.push_back(std::make_unique<Stage2>());
+    stages_.push_back(std::make_unique<Stage3>());
+    stages_.push_back(std::make_unique<Stage4>());
+    stages_.push_back(std::make_unique<Stage5>());
+    stages_.push_back(std::make_unique<Stage6>());
+    stages_.push_back(std::make_unique<FinalStage>());
     game_ = std::make_unique<Game>(*stages_.front());
 }
 
@@ -37,6 +49,14 @@ void StageManager::loadStage(std::size_t index, bool preserveRunStats)
 void StageManager::update(Input input, float dt)
 {
     game_->update(input, dt);
+
+    if (auto* stage5 = dynamic_cast<Stage5*>(&currentStage());
+        stage5 && stage5->restartRequested())
+    {
+        newRun();
+        return;
+    }
+
     if (game_->phase == Phase::Cleared && !isLastStage() && game_->phaseTime >= .65f)
         loadStage(currentIndex_ + 1, true);
 }

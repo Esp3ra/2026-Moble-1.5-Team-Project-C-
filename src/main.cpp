@@ -1,12 +1,16 @@
 #include "GameModel.hpp"
+#include "FinalStage.hpp"
 #include "IStage.hpp"
 #include "RenderCommon.hpp"
 #include "Stage1.hpp"
+#include "Stage6.hpp"
 #include "StageManager.hpp"
 
 #include <SFML/Graphics.hpp>
 #include <algorithm>
 #include <array>
+#include <cmath>
+#include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
@@ -18,14 +22,19 @@ namespace
 {
 using devil::Game;
 using devil::GameConfig;
+using devil::FinalStage;
+using devil::FinalStageLayout;
 using devil::IStage;
 using devil::Phase;
 using devil::PlayerState;
 using devil::Stage1;
 using devil::Stage1Layout;
+using devil::Stage6;
+using devil::Stage6Layout;
 using namespace devil::render;
 
-constexpr std::size_t plannedStageCount = 6;
+constexpr std::size_t plannedStageCount = 7;
+constexpr float endingReadyTime = 3.2f;
 
 void drawTopHud(sf::RenderTarget& target, std::size_t stageIndex, std::size_t stageCount)
 {
@@ -56,6 +65,51 @@ void drawTopHud(sf::RenderTarget& target, std::size_t stageIndex, std::size_t st
     }
 }
 
+void drawFinalEnding(sf::RenderTarget& target, const Game& game, std::size_t stageCount)
+{
+    const float fade = std::clamp(game.phaseTime / .55f, 0.f, 1.f);
+    sf::Color curtain{19, 14, 11};
+    curtain.a = static_cast<std::uint8_t>(std::round(fade * 255.f));
+    box(target, 0.f, 0.f, GameConfig::width, GameConfig::height, curtain);
+    if (game.phaseTime < .55f) return;
+
+    if (game.phaseTime < 1.45f)
+    {
+        label(target, "YOU ESCAPED", 480.f, 245.f, 4.f, light, true);
+        return;
+    }
+
+    // 어둠 속에서 잠깐 나타나는 데빌의 눈입니다.
+    box(target, 386.f, 133.f, 58.f, 12.f, earth);
+    box(target, 516.f, 133.f, 58.f, 12.f, earth);
+    box(target, 414.f, 145.f, 30.f, 8.f, earth);
+    box(target, 516.f, 145.f, 30.f, 8.f, earth);
+
+    if (game.phaseTime < 2.35f)
+    {
+        label(target, "NOT SO FAST", 480.f, 245.f, 4.f, light, true);
+        return;
+    }
+
+    label(target, "LEVEL DEVIL CLEARED", 480.f, 210.f, 3.f, light, true);
+    const auto seconds = std::to_string(static_cast<int>(game.elapsed));
+    const std::string progress = std::to_string(stageCount) + " / " +
+        std::to_string(stageCount);
+    label(target, progress, 480.f, 260.f, 2.f, earth, true);
+    label(target, "DEATHS " + std::to_string(game.deaths) + "   TIME " + seconds + "S",
+        480.f, 294.f, 1.f, light, true);
+
+    if (game.phaseTime >= endingReadyTime)
+    {
+        box(target, 354.f, 331.f, 252.f, 40.f, earth);
+        label(target, "ENTER  PLAY AGAIN", 480.f, 345.f, 1.f, light, true);
+    }
+    else
+    {
+        label(target, "...", 480.f, 345.f, 2.f, earth, true);
+    }
+}
+
 void drawScene(sf::RenderTarget& target, const IStage& stage, const Game& game,
     bool paused, bool finalStage = true, std::size_t stageIndex = 0,
     std::size_t stageCount = plannedStageCount)
@@ -79,6 +133,12 @@ void drawScene(sf::RenderTarget& target, const IStage& stage, const Game& game,
     }
 
     drawTopHud(target, stageIndex, stageCount);
+
+    if (game.phase == Phase::Cleared && finalStage && !paused)
+    {
+        drawFinalEnding(target, game, stageCount);
+        return;
+    }
 
     if (game.phase == Phase::Cleared || paused)
     {
@@ -112,9 +172,10 @@ void drawScene(sf::RenderTarget& target, const IStage& stage, const Game& game,
 }
 
 bool saveFrame(sf::RenderTexture& surface, const IStage& stage, const Game& game,
-    const std::filesystem::path& path)
+    const std::filesystem::path& path, bool finalStage = true,
+    std::size_t stageIndex = 0, std::size_t stageCount = plannedStageCount)
 {
-    drawScene(surface, stage, game, false);
+    drawScene(surface, stage, game, false, finalStage, stageIndex, stageCount);
     surface.display();
     return surface.getTexture().copyToImage().saveToFile(path);
 }
@@ -279,7 +340,7 @@ int verify(const std::filesystem::path& directory)
         enteredDoor && ok;
     for (int i = 0; i < 120 && game.phase != Phase::Cleared; ++i) game.update({});
     ok = game.phase == Phase::Cleared && ok;
-    ok = saveFrame(surface, stage, game, directory / "05-clear.png") && ok;
+    ok = saveFrame(surface, stage, game, directory / "05-clear.png", false) && ok;
     const bool savedPoses = savePlayerPoses(directory / "06-character-poses.png");
     ok = savedPoses && ok;
     std::ofstream result(directory / "verification.txt");
@@ -290,6 +351,151 @@ int verify(const std::filesystem::path& directory)
         << "Door entry -> clear: " << (game.phase == Phase::Cleared) << "\n"
         << "Character pose sheet (idle, walk, jump; both facings): " << savedPoses << "\n"
         << "Deaths: " << game.deaths << "\n";
+    return ok ? 0 : 1;
+}
+
+int verifyStage6(const std::filesystem::path& directory)
+{
+    std::filesystem::create_directories(directory);
+    sf::RenderTexture surface({960u, 540u});
+    Stage6 stage;
+    Game game(stage);
+    const auto save = [&](std::string_view name)
+    {
+        return saveFrame(surface, stage, game, directory / name, false, 5, 7);
+    };
+    const auto tickStage = [&](int count)
+    {
+        for (int i = 0; i < count; ++i) stage.update(game.player, GameConfig::step);
+    };
+
+    bool ok = save("01-start.png");
+
+    game.player.x = Stage6Layout::chaseTriggerX;
+    tickStage(30);
+    const bool sawStarted = stage.chaseStarted();
+    ok = save("02-saw-chase.png") && sawStarted && ok;
+
+    game.player.x = Stage6Layout::startLedgeEnd - GameConfig::playerWidth;
+    tickStage(46);
+    const bool sawRising = stage.bridgeTriggered() &&
+        stage.platformSawProgress(0) > stage.platformSawProgress(1);
+    ok = save("03-saws-rising.png") && sawRising && ok;
+
+    tickStage(42);
+    const bool floorOpening = stage.bridgeDropProgress(0) >
+        stage.bridgeDropProgress(Stage6Layout::bridgeTileCount - 1);
+    ok = save("04-bridge-collapse.png") && floorOpening && ok;
+
+    tickStage(150);
+    const bool routeReady = stage.firstSawReady() && stage.secondSawReady() &&
+        stage.thirdSawReady() &&
+        stage.chaseGone() &&
+        stage.bridgeDropProgress(Stage6Layout::bridgeTileCount - 1) >= 1.f;
+    ok = save("05-route-ready.png") && routeReady && ok;
+
+    game.player.x = Stage6Layout::doorX;
+    game.player.y = Stage6Layout::rightLedgeFloor - GameConfig::playerHeight;
+    game.player.grounded = true;
+    game.update({});
+    const bool automaticEntry = game.phase == Phase::EnteringDoor;
+    for (int i = 0; i < 20; ++i) game.update({});
+    ok = save("06-door-entry.png") && routeReady && automaticEntry && ok;
+
+    for (int i = 0; i < 120 && game.phase != Phase::Cleared; ++i) game.update({});
+    const bool cleared = game.phase == Phase::Cleared;
+    ok = save("07-clear.png") && cleared && ok;
+
+    std::ofstream result(directory / "verification.txt");
+    result << (ok ? "PASS" : "FAIL") << "\nSFML Stage6 offscreen rendering: 960x540\n"
+        << "Start-ledge chase saw triggered: " << sawStarted << "\n"
+        << "Three platform saws rose in sequence: " << sawRising << "\n"
+        << "Three bridge tiles collapsed in sequence: " << floorOpening << "\n"
+        << "Saw-ascent route state completed: " << routeReady << "\n"
+        << "Door automatic entry and clear: " << (automaticEntry && cleared) << "\n";
+    return ok ? 0 : 1;
+}
+
+int verifyFinalStage(const std::filesystem::path& directory)
+{
+    std::filesystem::create_directories(directory);
+    sf::RenderTexture surface({960u, 540u});
+    FinalStage stage;
+    Game game(stage);
+    const auto save = [&](std::string_view name)
+    {
+        return saveFrame(surface, stage, game, directory / name, true, 6, 7);
+    };
+    const auto tickStage = [&](int count)
+    {
+        for (int i = 0; i < count; ++i) stage.update(game.player, GameConfig::step);
+    };
+
+    bool ok = save("01-two-level-start.png");
+
+    game.player.x = FinalStageLayout::chaserTriggerX;
+    tickStage(28);
+    const bool chaser = stage.chaserActive();
+    ok = save("02-upper-chaser.png") && chaser && ok;
+
+    game.player.x = FinalStageLayout::upperGapTriggerX;
+    tickStage(24);
+    const bool upperGap = stage.upperGapOpen() && stage.upperGapProgress() > 0.f &&
+        stage.pushWallTriggered() && stage.pushWallProgress() >= .95f &&
+        !stage.upperSpikeTriggered();
+    ok = save("03-push-wall-trap.png") && upperGap && ok;
+
+    tickStage(60);
+    const bool pushWallFinished = stage.pushWallGone() &&
+        stage.pushWallProgress() <= .01f;
+
+    game.player.x = FinalStageLayout::upperSpikeTriggerX;
+    tickStage(24);
+    const bool upperSpikes = stage.upperSpikeTriggered() &&
+        stage.upperSpikeProgress() >= 1.f;
+    ok = save("04-upper-spikes.png") && upperSpikes && ok;
+
+    game.player.x = FinalStageLayout::shaftLeft;
+    game.player.y = 300.f;
+    tickStage(2);
+    const bool descent = stage.descentStarted();
+    ok = save("05-wall-saw-descent.png") && descent && ok;
+
+    game.player.x = FinalStageLayout::floorSawTriggerX - GameConfig::playerWidth;
+    game.player.y = FinalStageLayout::lowerFloor - GameConfig::playerHeight;
+    tickStage(34);
+    const bool risingSaw = stage.floorSawTriggered() && stage.floorSawProgress() >= 1.f;
+    ok = save("06-rising-floor-saw.png") && risingSaw && ok;
+
+    game.player.x = FinalStageLayout::lowerGapTriggerX - GameConfig::playerWidth;
+    tickStage(3);
+    game.player.x = FinalStageLayout::dartTriggerX - GameConfig::playerWidth;
+    tickStage(3);
+    const bool lowerTraps = stage.lowerGapOpen() && stage.dartActive();
+    ok = save("07-lower-traps.png") && lowerTraps && ok;
+
+    game.player.x = FinalStageLayout::doorX;
+    game.player.y = FinalStageLayout::lowerFloor - GameConfig::playerHeight;
+    game.player.grounded = true;
+    game.update({});
+    const bool automaticEntry = game.phase == Phase::EnteringDoor;
+    for (int i = 0; i < 20; ++i) game.update({});
+    ok = save("08-door-entry.png") && automaticEntry && ok;
+
+    for (int i = 0; i < 120 && game.phase != Phase::Cleared; ++i) game.update({});
+    for (int i = 0; i < 400; ++i) game.update({});
+    const bool endingReady = game.phase == Phase::Cleared && game.phaseTime >= endingReadyTime;
+    ok = save("09-ending.png") && endingReady && ok;
+
+    std::ofstream result(directory / "verification.txt");
+    result << (ok ? "PASS" : "FAIL") << "\nSFML FinalStage offscreen rendering: 960x540\n"
+        << "Upper chaser, falling floor, timed Push wall and spikes: "
+        << (chaser && upperGap && pushWallFinished && upperSpikes) << "\n"
+        << "Alternating wall-saw descent entered: " << descent << "\n"
+        << "Rising floor saw replaced falling block: " << risingSaw << "\n"
+        << "Lower gap and dart triggered: " << lowerTraps << "\n"
+        << "Lower-left door automatic entry: " << automaticEntry << "\n"
+        << "Animated 7-room ending reached: " << endingReady << "\n";
     return ok ? 0 : 1;
 }
 
@@ -320,9 +526,13 @@ int main(int argc, char* argv[])
     {
         if (argc >= 3 && std::string_view(argv[1]) == "--verify") return verify(argv[2]);
         if (argc >= 3 && std::string_view(argv[1]) == "--verify-motion") return verifyMotion(argv[2]);
+        if (argc >= 3 && std::string_view(argv[1]) == "--verify-stage6")
+            return verifyStage6(argv[2]);
+        if (argc >= 3 && std::string_view(argv[1]) == "--verify-final")
+            return verifyFinalStage(argv[2]);
 
         sf::RenderWindow window(sf::VideoMode({960u, 540u}),
-            "Level Devil - Stage 1-1 | C++ / SFML");
+            "Level Devil - 6 Stages + Final | C++ / SFML");
         window.setVerticalSyncEnabled(true);
         window.setKeyRepeatEnabled(false);
         updateView(window);
@@ -356,7 +566,8 @@ int main(int argc, char* argv[])
                     }
                     if (key->code == K::Q && paused) window.close();
                     if (key->code == K::R ||
-                        (key->code == K::Enter && game.phase == Phase::Cleared && stages.isLastStage()))
+                        (key->code == K::Enter && game.phase == Phase::Cleared &&
+                            stages.isLastStage() && game.phaseTime >= endingReadyTime))
                     {
                         if (game.phase == Phase::Cleared) stages.newRun();
                         else stages.retry();
@@ -385,6 +596,7 @@ int main(int argc, char* argv[])
                         jumpQueued = false;
                     }
                     else if (game.phase == Phase::Cleared && stages.isLastStage() && !paused &&
+                        game.phaseTime >= endingReadyTime &&
                         sf::FloatRect({354.f, 331.f}, {252.f, 40.f}).contains(point))
                     {
                         stages.newRun();
@@ -413,8 +625,11 @@ int main(int argc, char* argv[])
                     accumulator -= GameConfig::step;
                 }
             }
+            // Stage2~5가 아직 없는 개발 빌드에서도 6번과 FINAL의 진행 칸을 제자리에 표시합니다.
+            const std::size_t hudIndex = stages.stageCount() == 3 && stages.currentIndex() > 0
+                ? stages.currentIndex() + 4 : stages.currentIndex();
             drawScene(window, stages.currentStage(), game, paused, stages.isLastStage(),
-                stages.currentIndex(), std::max(plannedStageCount, stages.stageCount()));
+                hudIndex, std::max(plannedStageCount, stages.stageCount()));
             window.display();
         }
         return 0;

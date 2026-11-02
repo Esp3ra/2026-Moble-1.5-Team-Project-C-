@@ -5,3 +5,8 @@
 /external/SFML-3.1.0/
 /external/*.zip
 *.vcxproj.user
+
+# Local delivery archive, empty schedule note, and Office lock files
+/1.5차 팀 프로젝트.zip
+/9-7~9-18.txt
+~$*

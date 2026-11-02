@@ -11,7 +11,7 @@
 The unmodified official package is extracted locally under `SFML-3.1.0/`.
 The application uses its graphics, window, and system libraries.
 Debug uses `-d` libraries and DLLs; Release uses the release libraries and DLLs.
-The application itself is built with Visual Studio 2026's v145 toolset and C++17.
+The application itself is built with Visual Studio 2026's v143 toolset and C++17.
 The build copies the required SFML DLLs and license next to the executable.
 
 Run `Prepare-Dependencies.ps1` to restore this exact package when copying the source

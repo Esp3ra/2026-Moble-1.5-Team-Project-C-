@@ -23,10 +23,10 @@ class Stage1 final : public IStage
 public:
     Stage1();
 
-    std::string_view label() const override { return "1 - 1"; }
+    std::string_view label() const override { return "1"; }
     Vec2 spawnPoint() const override;
     void reset() override;
-    void update(const PlayerState& player, float dt) override;
+    void update(PlayerState& player, float dt) override;
     const std::vector<RectF>& solids() const override { return solids_; }
     bool touchesHazard(const RectF& playerBounds) const override;
     bool isAtGoal(const PlayerState& player) const override;

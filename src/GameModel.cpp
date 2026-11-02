@@ -158,9 +158,9 @@ void Game::update(Input input, float dt)
     player.y += player.velocityY * dt;
     player.grounded = false;
 
-    if (player.y < GameConfig::ceiling)
+    if (player.y < stage_->ceilingY())
     {
-        player.y = GameConfig::ceiling;
+        player.y = stage_->ceilingY();
         player.velocityY = std::max(0.f, player.velocityY);
     }
 

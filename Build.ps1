@@ -18,7 +18,7 @@ if (-not $msbuildPath) {
     $msbuildCommand = Get-Command MSBuild.exe -ErrorAction SilentlyContinue
     if ($msbuildCommand) { $msbuildPath = $msbuildCommand.Source }
 }
-if (-not $msbuildPath) { throw 'Visual Studio 2026 C++ desktop workload (v145) was not found.' }
+if (-not $msbuildPath) { throw 'Visual Studio 2026 C++ desktop workload (v143) was not found.' }
 $buildTarget = if ($Rebuild) { 'Rebuild' } else { 'Build' }
 & $msbuildPath (Join-Path $projectRoot 'LevelDevil.slnx') '/m' '/nologo' '/v:minimal' "/t:$buildTarget" "/p:Configuration=$Configuration" '/p:Platform=x64'
 if ($LASTEXITCODE -ne 0) { throw "Build failed with exit code $LASTEXITCODE." }

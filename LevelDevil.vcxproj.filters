@@ -10,18 +10,32 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp"><Filter>Source Files</Filter></ClCompile>
+    <ClCompile Include="src\FinalStage.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
     <ClCompile Include="src\GameModel.cpp"><Filter>Source Files\Common</Filter></ClCompile>
     <ClCompile Include="src\RenderCommon.cpp"><Filter>Source Files\Common</Filter></ClCompile>
     <ClCompile Include="src\StageManager.cpp"><Filter>Source Files\Common</Filter></ClCompile>
     <ClCompile Include="src\Stage1.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage2.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage3.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage3Objects.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage4.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage5.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
+    <ClCompile Include="src\Stage6.cpp"><Filter>Source Files\Stages</Filter></ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Common.hpp"><Filter>Header Files\Common</Filter></ClInclude>
+    <ClInclude Include="src\FinalStage.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
     <ClInclude Include="src\GameModel.hpp"><Filter>Header Files\Common</Filter></ClInclude>
     <ClInclude Include="src\IStage.hpp"><Filter>Header Files\Common</Filter></ClInclude>
     <ClInclude Include="src\RenderCommon.hpp"><Filter>Header Files\Common</Filter></ClInclude>
     <ClInclude Include="src\StageManager.hpp"><Filter>Header Files\Common</Filter></ClInclude>
     <ClInclude Include="src\Stage1.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage2.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage3.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage3Objects.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage4.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage5.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
+    <ClInclude Include="src\Stage6.hpp"><Filter>Header Files\Stages</Filter></ClInclude>
   </ItemGroup>
   <ItemGroup><Manifest Include="LevelDevil.manifest" /><None Include="README.md" /></ItemGroup>
 </Project>
