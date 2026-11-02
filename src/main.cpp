@@ -474,18 +474,28 @@ int verifyFinalStage(const std::filesystem::path& directory)
     const bool lowerTraps = stage.lowerGapOpen() && stage.dartActive();
     ok = save("07-lower-traps.png") && lowerTraps && ok;
 
+    game.player.x = FinalStageLayout::ceilingBlockTriggerX - GameConfig::playerWidth;
+    tickStage(30);
+    const bool ceilingBlock = stage.ceilingBlockTriggered() &&
+        stage.ceilingBlockProgress() >= .95f &&
+        stage.touchesHazard(stage.ceilingBlockBounds());
+    ok = save("08-ceiling-block.png") && ceilingBlock && ok;
+    tickStage(60);
+    const bool ceilingBlockFinished = stage.ceilingBlockGone() &&
+        stage.ceilingBlockProgress() <= .01f;
+
     game.player.x = FinalStageLayout::doorX;
     game.player.y = FinalStageLayout::lowerFloor - GameConfig::playerHeight;
     game.player.grounded = true;
     game.update({});
     const bool automaticEntry = game.phase == Phase::EnteringDoor;
     for (int i = 0; i < 20; ++i) game.update({});
-    ok = save("08-door-entry.png") && automaticEntry && ok;
+    ok = save("09-door-entry.png") && ceilingBlockFinished && automaticEntry && ok;
 
     for (int i = 0; i < 120 && game.phase != Phase::Cleared; ++i) game.update({});
     for (int i = 0; i < 400; ++i) game.update({});
     const bool endingReady = game.phase == Phase::Cleared && game.phaseTime >= endingReadyTime;
-    ok = save("09-ending.png") && endingReady && ok;
+    ok = save("10-ending.png") && endingReady && ok;
 
     std::ofstream result(directory / "verification.txt");
     result << (ok ? "PASS" : "FAIL") << "\nSFML FinalStage offscreen rendering: 960x540\n"
@@ -494,6 +504,7 @@ int verifyFinalStage(const std::filesystem::path& directory)
         << "Alternating wall-saw descent entered: " << descent << "\n"
         << "Rising floor saw replaced falling block: " << risingSaw << "\n"
         << "Lower gap and dart triggered: " << lowerTraps << "\n"
+        << "Ceiling block hazard and retraction: " << (ceilingBlock && ceilingBlockFinished) << "\n"
         << "Lower-left door automatic entry: " << automaticEntry << "\n"
         << "Animated 7-room ending reached: " << endingReady << "\n";
     return ok ? 0 : 1;

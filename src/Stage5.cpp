@@ -192,11 +192,11 @@ namespace devil
             }
 
             // 계단 오른쪽 끝 ~ trap4 시작
-            const float stairRight =
+            constexpr float stairRight =
                 Stage5Layout::stairX +
                 Stage5Layout::stairStepWidth * 3.f;
 
-            if (stairRight < Stage5Layout::trap4X)
+            if constexpr (stairRight < Stage5Layout::trap4X)
             {
                 solids_.push_back({
                     stairRight,

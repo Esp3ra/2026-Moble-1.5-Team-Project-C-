@@ -109,7 +109,7 @@ void commonStageRegistration()
     CHECK(stages.stageCount() == 7);
     CHECK(stages.currentIndex() == 0);
     CHECK(!stages.isLastStage());
-    CHECK(stages.currentStage().label() == "1 - 1");
+    CHECK(stages.currentStage().label() == "1");
     CHECK(&stages.game().stage() == &stages.currentStage());
 
     stages.game().player.x = devil::Stage1Layout::doorX;
@@ -118,7 +118,7 @@ void commonStageRegistration()
     CHECK(stages.game().phase == devil::Phase::EnteringDoor);
     for (int i = 0; i < 240 && stages.currentIndex() == 0; ++i) stages.update({});
     CHECK(stages.currentIndex() == 1);
-    CHECK(stages.currentStage().label() == "2 - 5");
+    CHECK(stages.currentStage().label() == "2");
     CHECK(!stages.isLastStage());
     CHECK(near(stages.game().player.x, devil::Stage2Layout::spawnX));
     CHECK(near(stages.game().feet(), devil::Stage2Layout::floor));
@@ -128,8 +128,8 @@ void stageThreeFourAssignment()
 {
     devil::Stage3 coinsStage;
     devil::Stage4 pushStage;
-    CHECK(coinsStage.label() == "4 - 1");
-    CHECK(pushStage.label() == "1 - 3");
+    CHECK(coinsStage.label() == "3");
+    CHECK(pushStage.label() == "4");
     CHECK(near(devil::Stage3Layout::coinSize, 15.f));
     CHECK(near(devil::Stage4Layout::startBlockWidth, 28.f));
 }
@@ -500,7 +500,8 @@ void stage5PlayableRoute()
     bool firstJump = false;
     bool secondJump = false;
     bool thirdJump = false;
-    bool trap5Jump = false;
+    bool passedTrap5 = false;
+    bool passedColumn = false;
     bool trap6LeftJump = false;
     bool trap6RightJump = false;
     bool realDoorJump = false;
@@ -639,12 +640,19 @@ void stage5PlayableRoute()
                 if (game.player.grounded && feet > 360.f)
                 {
                     input.direction = -1;
-                    input.jumpPressed = true;
-                    trap5Jump = true;
+                    // 계단에서 걸어 내려가 기둥 아래로 통과합니다.
+                    // 여기서 점프하면 기둥 옆면에 막혀 trap5로 떨어집니다.
                     returnStairState = 8;
                 }
             }
-            if (trap5Jump && !trap6LeftJump && game.player.x <= 300.f
+            if (returnStairState == 8 && game.player.grounded)
+            {
+                if (game.player.bounds().right() <= devil::Stage5Layout::trap5X)
+                    passedTrap5 = true;
+                if (game.player.bounds().right() <= devil::Stage5Layout::dropColumnX)
+                    passedColumn = true;
+            }
+            if (passedTrap5 && !trap6LeftJump && game.player.x <= 300.f
                 && game.player.grounded)
             {
                 input.jumpPressed = true;
@@ -676,7 +684,8 @@ void stage5PlayableRoute()
     CHECK(secondJump);
     CHECK(thirdJump);
     CHECK(stairLevel == 3);
-    CHECK(trap5Jump);
+    CHECK(passedTrap5);
+    CHECK(passedColumn);
     CHECK(trap6LeftJump);
     CHECK(trap6RightJump);
     CHECK(realDoorJump);
@@ -1246,6 +1255,21 @@ void finalStageTrapSequence()
         devil::FinalStageLayout::dartWidth, devil::FinalStageLayout::dartHeight}));
 
     player.x = devil::FinalStageLayout::doorX;
+    CHECK(!stage.isAtGoal(player));
+
+    player.x = devil::FinalStageLayout::ceilingBlockTriggerX -
+        devil::GameConfig::playerWidth * .5f;
+    stage.update(player, devil::GameConfig::step);
+    CHECK(stage.ceilingBlockTriggered());
+    CHECK(!stage.ceilingBlockGone());
+    for (int i = 0; i < 30; ++i) stage.update(player, devil::GameConfig::step);
+    CHECK(near(stage.ceilingBlockProgress(), 1.f));
+    CHECK(stage.touchesHazard(stage.ceilingBlockBounds()));
+    player.x = devil::FinalStageLayout::doorX;
+    CHECK(!stage.isAtGoal(player));
+    for (int i = 0; i < 60; ++i) stage.update(player, devil::GameConfig::step);
+    CHECK(stage.ceilingBlockGone());
+    CHECK(near(stage.ceilingBlockProgress(), 0.f));
     CHECK(stage.isAtGoal(player));
 
     stage.reset();
@@ -1257,6 +1281,9 @@ void finalStageTrapSequence()
     CHECK(!stage.floorSawTriggered());
     CHECK(!stage.lowerGapOpen());
     CHECK(!stage.dartActive());
+    CHECK(!stage.ceilingBlockTriggered());
+    CHECK(!stage.ceilingBlockGone());
+    CHECK(near(stage.ceilingBlockProgress(), 0.f));
 }
 
 void finalStagePushWallPunishesRush()
@@ -1333,6 +1360,8 @@ void finalStageContinuousPlayableRoute()
     bool jumpedFloorSaw = false;
     bool jumpedLowerGap = false;
     bool jumpedDart = false;
+    bool landedLowerLevel = false;
+    bool waitedForCeilingBlock = false;
 
     for (int frame = 0; frame < 4800 && game.phase == devil::Phase::Playing; ++frame)
     {
@@ -1357,30 +1386,43 @@ void finalStageContinuousPlayableRoute()
                 jumpedUpperSpikes = true;
             }
         }
-        else if (!game.player.grounded ||
-            game.player.feet() < devil::FinalStageLayout::lowerFloor - .2f)
+        else if (!landedLowerLevel)
         {
-            if (game.player.feet() < 235.f)
-                input.direction = -1;
-            else if (game.player.feet() < 365.f)
+            // 벽 톱날 사이의 중앙 통로로 낙하한 뒤 아래층 이동을 시작합니다.
+            const float shaftCenter = (devil::FinalStageLayout::shaftLeft +
+                devil::FinalStageLayout::shaftRight - devil::GameConfig::playerWidth) * .5f;
+            const float tolerance = devil::GameConfig::speed * devil::GameConfig::step;
+            if (game.player.x < shaftCenter - tolerance)
                 input.direction = 1;
-            else
+            else if (game.player.x > shaftCenter + tolerance)
                 input.direction = -1;
+            else
+                input.direction = 0;
+            if (game.player.grounded &&
+                near(game.feet(), devil::FinalStageLayout::lowerFloor))
+                landedLowerLevel = true;
         }
         else
         {
             input.direction = -1;
-            if (!jumpedFloorSaw && game.player.x <= 650.f)
+            if (stage.ceilingBlockTriggered() && !stage.ceilingBlockGone())
+            {
+                input.direction = 0;
+                waitedForCeilingBlock = true;
+            }
+            if (!jumpedFloorSaw && game.player.grounded && game.player.x <= 650.f)
             {
                 input.jumpPressed = true;
                 jumpedFloorSaw = true;
             }
-            else if (jumpedFloorSaw && !jumpedLowerGap && game.player.x <= 492.f)
+            else if (jumpedFloorSaw && !jumpedLowerGap &&
+                game.player.grounded && game.player.x <= 492.f)
             {
                 input.jumpPressed = true;
                 jumpedLowerGap = true;
             }
-            else if (jumpedLowerGap && !jumpedDart && game.player.x <= 304.f)
+            else if (jumpedLowerGap && !jumpedDart &&
+                game.player.grounded && game.player.x <= 304.f)
             {
                 input.jumpPressed = true;
                 jumpedDart = true;
@@ -1394,6 +1436,9 @@ void finalStageContinuousPlayableRoute()
     CHECK(jumpedFloorSaw);
     CHECK(jumpedLowerGap);
     CHECK(jumpedDart);
+    CHECK(landedLowerLevel);
+    CHECK(waitedForCeilingBlock);
+    CHECK(stage.ceilingBlockGone());
     CHECK(stage.chaserActive());
     CHECK(stage.upperGapOpen());
     CHECK(stage.upperSpikeTriggered());
